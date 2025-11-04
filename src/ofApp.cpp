@@ -14,8 +14,8 @@ phaseAdderTarget 	= 0.0f;
 volume				= 0.1f;
 bNoise 				= false;
 
-hit_white_keys = {0,0,0,0,0,0,0};
-hit_black_keys = {0,0,0,0,0};
+white_keys = {0,0,0,0,0,0,0};
+black_keys = {0,0,0,0,0};
 
 lAudio.assign(bufferSize, 0.0);
 rAudio.assign(bufferSize, 0.0);
@@ -59,7 +59,7 @@ void ofApp::draw()
     ofFill();
     for (int i = 0; i < 7; i++)
     {
-		if (hit_white_keys[i]==0)
+		if (white_keys[i]==0)
 		{
 			ofSetColor(255,255,255);
 			ofDrawRectRounded(
@@ -94,7 +94,7 @@ void ofApp::draw()
 			{
 				j = j-1;
 			}
-			if (hit_black_keys[j]==0)
+			if (black_keys[j]==0)
 			{
 				ofSetColor(15,15,15);
 				ofDrawRectRounded(
@@ -134,53 +134,53 @@ void ofApp::keyPressed(int key)
 	// White keys
 	if (key == 's')
 	{
-		hit_white_keys[0] = 1;
+		white_keys[0] = 1;
 	}
 	if (key == 'd')
 	{
-		hit_white_keys[1] = 1;
+		white_keys[1] = 1;
 	}
 	if (key == 'f')
 	{
-		hit_white_keys[2] = 1;
+		white_keys[2] = 1;
 	}
 	if (key == 'g')
 	{
-		hit_white_keys[3] = 1;
+		white_keys[3] = 1;
 	}
 	if (key == 'h')
 	{
-		hit_white_keys[4] = 1;
+		white_keys[4] = 1;
 	}
 	if (key == 'j')
 	{
-		hit_white_keys[5] = 1;
+		white_keys[5] = 1;
 	}
 	if (key == 'k')
 	{
-		hit_white_keys[6] = 1;
+		white_keys[6] = 1;
 	}
 
 	// Black keys
 	if (key == 'e')
 	{
-		hit_black_keys[0] = 1;
+		black_keys[0] = 1;
 	}
 	if (key == 'r')
 	{
-		hit_black_keys[1] = 1;
+		black_keys[1] = 1;
 	}
 	if (key == 'y')
 	{
-		hit_black_keys[2] = 1;
+		black_keys[2] = 1;
 	}
 	if (key == 'u')
 	{
-		hit_black_keys[3] = 1;
+		black_keys[3] = 1;
 	}
 	if (key == 'i')
 	{
-		hit_black_keys[4] = 1;
+		black_keys[4] = 1;
 	}
 }
 
@@ -189,53 +189,53 @@ void ofApp::keyReleased(int key)
 {
 	if (key == 's')
 	{
-		hit_white_keys[0] = 0;
+		white_keys[0] = 0;
 	}
 	if (key == 'd')
 	{
-		hit_white_keys[1] = 0;
+		white_keys[1] = 0;
 	}
 	if (key == 'f')
 	{
-		hit_white_keys[2] = 0;
+		white_keys[2] = 0;
 	}
 	if (key == 'g')
 	{
-		hit_white_keys[3] = 0;
+		white_keys[3] = 0;
 	}
 	if (key == 'h')
 	{
-		hit_white_keys[4] = 0;
+		white_keys[4] = 0;
 	}
 	if (key == 'j')
 	{
-		hit_white_keys[5] = 0;
+		white_keys[5] = 0;
 	}
 	if (key == 'k')
 	{
-		hit_white_keys[6] = 0;
+		white_keys[6] = 0;
 	}
 
 	// Black keys
 	if (key == 'e')
 	{
-		hit_black_keys[0] = 0;
+		black_keys[0] = 0;
 	}
 	if (key == 'r')
 	{
-		hit_black_keys[1] = 0;
+		black_keys[1] = 0;
 	}
 	if (key == 'y')
 	{
-		hit_black_keys[2] = 0;
+		black_keys[2] = 0;
 	}
 	if (key == 'u')
 	{
-		hit_black_keys[3] = 0;
+		black_keys[3] = 0;
 	}
 	if (key == 'i')
 	{
-		hit_black_keys[4] = 0;
+		black_keys[4] = 0;
 	}
 }
 

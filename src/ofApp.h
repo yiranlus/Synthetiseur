@@ -30,6 +30,9 @@ class ofApp : public ofBaseApp{
 		bool 	bNoise;
 		float 	volume;
 
+		vector <int> hit_white_keys;
+		vector <int> hit_black_keys;
+
 		vector <float> lAudio;
 		vector <float> rAudio;
 		

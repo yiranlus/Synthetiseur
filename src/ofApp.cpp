@@ -98,6 +98,8 @@ void ofApp::draw(){
 void ofApp::keyPressed(int key){
     if (mappedFrequency.find(key) == mappedFrequency.end())
         return;
+    if (pressedKeys.find(key) != pressedKeys.end())
+        return;
     pressedKeys.insert(key);
     freqPhases[key] = 0.0f;
     freqPhaseAdders[key] = (mappedFrequency[key] / (float) sampleRate) * glm::two_pi<float>();
@@ -106,12 +108,7 @@ void ofApp::keyPressed(int key){
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
     pressedKeys.erase(key);
-    freqPhases.erase(key);
-
-    if (pressedKeys.empty()) {
-        phase = 0.0f;
-        phaseAdderTarget = 0.0f;
-    }
+    // freqPhases.erase(key);
 }
 
 void ofApp::audioOut(ofSoundBuffer & buffer){

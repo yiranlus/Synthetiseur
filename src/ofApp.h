@@ -1,4 +1,5 @@
 #pragma once
+
 #include <vector>
 #include <set>
 #include <map>
@@ -29,6 +30,8 @@ class ofApp : public ofBaseApp{
 		// void dragEvent(ofDragInfo dragInfo) override;
 		// void gotMessage(ofMessage msg) override;
 		void init_mapped_frequencies();
+		void init_mappedWhiteKeyIndices();
+		void init_mappedBlackKeyIndices();
 		void audioOut(ofSoundBuffer & buffer) override;
 
 	private:
@@ -38,20 +41,14 @@ class ofApp : public ofBaseApp{
 		float phaseAdder;
 		float phaseAdderTarget;
 
-		// Yiran
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;
 		map<int, float> freqPhases;
 		map<int, float> freqPhaseAdders;
-
-		// Julien
 		map<int, int> mappedWhiteKeyIndices;
 		map<int, int> mappedBlackKeyIndices;
-		vector <int> white_keys;
-		vector <int> black_keys;
 		
 		vector<float> lAudio;
 		vector<float> rAudio;
 		float volume;
-		
 };

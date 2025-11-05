@@ -86,16 +86,44 @@ void ofApp::update()
 void ofApp::draw()
 {
     ofSetColor(225);
-    ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 50, 50);
+    ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 32, 50);
 
 	draw_keys();
+	drawSound();
+}
+
+void ofApp::drawSound()
+{
+		// draw the left channel:
+	ofPushStyle();
+	ofPushMatrix();
+	ofTranslate(32, 150, 0);
+
+	ofNoFill();
+	ofSetColor(255);
+	ofDrawBitmapString("Sound Wave", 4, 18);
+	
+	ofSetLineWidth(1);
+	ofDrawRectangle(0, 0, 600, 200);
+
+	ofSetColor(245, 58, 135);
+	ofSetLineWidth(3);
+				
+	ofBeginShape();
+	for (unsigned int i = 0; i < lAudio.size(); i++){
+		float x =  ofMap(i, 0, lAudio.size(), 0, 600, true);
+		ofVertex(x, 100 -lAudio[i]*180.0f);
+	}
+	ofEndShape(false);
+	ofPopMatrix();
+	ofPopStyle();
 }
 
 //--------------------------------------------------------------
 void ofApp::draw_keys()
 {
 	// Setting keyboard properties
-    int x_keyboard = 200;
+    int x_keyboard = 32;
     int y_keyboard = 800;
     int key_width = 40;
     int padding = 4;

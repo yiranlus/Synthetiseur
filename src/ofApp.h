@@ -34,7 +34,8 @@ class ofApp : public ofBaseApp{
 		void init_mappedWhiteKeyIndices();
 		void init_mappedBlackKeyIndices();
 		void audioOut(ofSoundBuffer & buffer) override;
-
+		void drawSound();
+		
 	private:
 		ofSoundStream soundStream;
 		int sampleRate;

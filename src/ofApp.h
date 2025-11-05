@@ -30,21 +30,30 @@ class ofApp : public ofBaseApp{
 		// void dragEvent(ofDragInfo dragInfo) override;
 		// void gotMessage(ofMessage msg) override;
 		void init_mapped_frequencies();
+		void init_frequencyAdders();
 		void init_mappedWhiteKeyIndices();
 		void init_mappedBlackKeyIndices();
 		void audioOut(ofSoundBuffer & buffer) override;
 
+		inline float n_freq(float frequency) { return (log2(frequency)  - log2(440)) * 12; }
+		inline float freq_n(float n) { return pow(2, n/12.0f) * 440.0f; }
+		void activate_frequency(float frequency);
+		void normalize_amplitudes();
+
 	private:
 		ofSoundStream soundStream;
 		int sampleRate;
-		float phase;
-		float phaseAdder;
-		float phaseAdderTarget;
+
+		vector<float> frequencyPhases; // interval in log scale
+		int numOfFrequencies;
+		float lowerFrequencyBound;
+		float upperFrequencyBound;
+		float sigma; // how the amplitude is smoothed
+		vector<float> frequencyPhaseAdders;
+		vector<float> frequencyAmplitudes;
 
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;
-		map<int, float> freqPhases;
-		map<int, float> freqPhaseAdders;
 		map<int, int> mappedWhiteKeyIndices;
 		map<int, int> mappedBlackKeyIndices;
 

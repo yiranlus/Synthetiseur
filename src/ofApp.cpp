@@ -8,10 +8,14 @@ void ofApp::setup()
 
 	int bufferSize		= 128;
 	sampleRate 			= 44100;
-	phase 				= 0;
-	phaseAdder 			= 0.0f;
-	phaseAdderTarget 	= 0.0f;
 	volume				= 0.1f;
+
+	sigma = 0.1f;
+	numOfFrequencies = 256;
+	lowerFrequencyBound = 250.0f;
+	upperFrequencyBound = 500.0f;
+	frequencyAmplitudes.assign(numOfFrequencies, 0.0f);
+	frequencyPhases.assign(numOfFrequencies, 0.0f);
 
 	lAudio.assign(bufferSize, 0.0);
 	rAudio.assign(bufferSize, 0.0);
@@ -33,6 +37,7 @@ void ofApp::setup()
 
 	// setup the keyboard mapping
     init_mapped_frequencies();
+	init_frequencyAdders();
 	init_mappedWhiteKeyIndices();
 	init_mappedBlackKeyIndices();
 }
@@ -51,6 +56,15 @@ void ofApp::init_mapped_frequencies(){
     mappedFrequency['j'] = 440.00f; // A
     mappedFrequency['i'] = 466.16f; // A#
     mappedFrequency['k'] = 493.88f; // B
+}
+
+void ofApp::init_frequencyAdders() {
+	frequencyPhaseAdders.assign(numOfFrequencies, 0.0f);
+	for (int i = 0; i < numOfFrequencies; i++) {
+		float n = ofMap(i, 0, numOfFrequencies, n_freq(lowerFrequencyBound), n_freq(upperFrequencyBound), true);
+		float frequency = freq_n(n);
+		frequencyPhaseAdders[i] = (frequency / (float)sampleRate) * glm::two_pi<float>();
+	}
 }
 
 //--------------------------------------------------------------
@@ -79,7 +93,13 @@ void ofApp::init_mappedBlackKeyIndices(){
 //--------------------------------------------------------------
 void ofApp::update()
 {
-
+	frequencyAmplitudes.assign(numOfFrequencies, 0.0f);
+	for (const auto &key: pressedKeys) {
+		activate_frequency(mappedFrequency[key]);
+	}
+	if (!pressedKeys.empty()) {
+		normalize_amplitudes();
+	}
 }
 
 //--------------------------------------------------------------
@@ -149,6 +169,29 @@ void ofApp::draw()
 			);
 		}
 	}
+
+		ofPushStyle();
+		ofPushMatrix();
+		ofTranslate(32, 350, 0);
+
+		ofSetColor(225);
+		ofDrawBitmapString("Frequency", 4, 18);
+
+		ofSetLineWidth(1);
+		ofDrawRectangle(0, 0, 900, 200);
+
+		ofSetColor(245, 58, 135);
+		ofSetLineWidth(3);
+
+			ofBeginShape();
+			for (int i = 0; i < numOfFrequencies; i++) {
+				float x =  ofMap(i, 0, numOfFrequencies, 0, 900, true);
+				ofVertex(x, 100 - frequencyAmplitudes[i]*100);
+			}
+			ofEndShape(false);
+
+		ofPopMatrix();
+	ofPopStyle();
 }
 
 //--------------------------------------------------------------
@@ -159,8 +202,6 @@ void ofApp::keyPressed(int key)
 	if (pressedKeys.find(key) != pressedKeys.end())
 		return;
     pressedKeys.insert(key);
-    freqPhases[key] = 0.0f;
-    freqPhaseAdders[key] = (mappedFrequency[key] / (float) sampleRate) * glm::two_pi<float>();
 }
 
 //--------------------------------------------------------------
@@ -220,16 +261,37 @@ void ofApp::keyReleased(int key)
 // }
 
 void ofApp::audioOut(ofSoundBuffer & buffer){
-	// sin (n) seems to have trouble when n is very large, so we
-	// keep phase in the range of 0-glm::two_pi<float>() like this:
-
     for (size_t i = 0; i < buffer.getNumFrames(); i++){
         float sample = 0.0f;
-        for (const auto &key: pressedKeys) {
-            freqPhases[key] = fmod(freqPhases[key] + freqPhaseAdders[key], glm::two_pi<float>());
-            sample += sin(freqPhases[key]) / pressedKeys.size();
-        }
+		for (int i = 0; i < numOfFrequencies; i++) {
+			frequencyPhases[i] = fmod(frequencyPhases[i] + frequencyPhaseAdders[i], glm::two_pi<float>());
+			sample += frequencyAmplitudes[i] * sin(frequencyPhases[i]) / pressedKeys.size();
+		}
         lAudio[i] = buffer[i*buffer.getNumChannels()    ] = sample * volume;
         rAudio[i] = buffer[i*buffer.getNumChannels() + 1] = sample * volume;
     }
+}
+
+void ofApp::activate_frequency(float frequency) {
+	int n = n_freq(frequency);
+	float sigma2 = sigma*sigma;
+	float coeff = 1/sqrt(2*TWO_PI*sigma2);
+
+	for (int i = 0; i < numOfFrequencies; i++) {
+		float n_i = ofMap(i, 0, numOfFrequencies, n_freq(lowerFrequencyBound), n_freq(upperFrequencyBound), true);
+		frequencyAmplitudes[i] += coeff * exp(-(n_i - n)*(n_i - n) / (2 * sigma2));
+	}
+}
+
+void ofApp::normalize_amplitudes() {
+	float maxAmplitude = 0.0f;
+	for (int i = 0; i < numOfFrequencies; i++) {
+		if (frequencyAmplitudes[i] > maxAmplitude) {
+			maxAmplitude = frequencyAmplitudes[i];
+		}
+	}
+	// ofLog(OF_LOG_NOTICE) << "maxAmplitude: " << maxAmplitude;
+	for (int i = 0; i < numOfFrequencies; i++) {
+		frequencyAmplitudes[i] /= maxAmplitude;
+	}
 }

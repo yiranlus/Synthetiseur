@@ -15,6 +15,7 @@ class ofApp : public ofBaseApp{
 		void setup() override;
 		void update() override;
 		void draw() override;
+		void draw_keys();
 		// void exit() override;
 
 		void keyPressed(int key) override;

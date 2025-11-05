@@ -88,7 +88,13 @@ void ofApp::draw()
     ofSetColor(225);
     ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 50, 50);
 
-    // Setting keyboard properties
+	draw_keys();
+}
+
+//--------------------------------------------------------------
+void ofApp::draw_keys()
+{
+	// Setting keyboard properties
     int x_keyboard = 200;
     int y_keyboard = 800;
     int key_width = 40;

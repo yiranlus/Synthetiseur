@@ -10,10 +10,10 @@ void ofApp::setup()
 	sampleRate 			= 44100;
 	volume				= 0.1f;
 
-	sigma = 0.1f;
+	sigma = 0.03f;
 	numOfFrequencies = 1024;
 	lowerFrequencyBound = 250.0f;
-	upperFrequencyBound = 500.0f;
+	upperFrequencyBound = 510.0f;
 	frequencyAmplitudes.assign(numOfFrequencies, 0.0f);
 	frequencyPhases.assign(numOfFrequencies, 0.0f);
 
@@ -196,9 +196,6 @@ void ofApp::keyPressed(int key)
 		return;
     pressedKeys.insert(key);
 	activate_frequency(mappedFrequency[key]);
-
-	cout << "Key " << key << " pressed" << endl;
-	cout << "Frequency: " << mappedFrequency[key] << endl;
 }
 
 //--------------------------------------------------------------
@@ -274,13 +271,16 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
 }
 
 void ofApp::activate_frequency(float frequency) {
-	int n = n_freq(frequency);
+	float n = n_freq(frequency);
 	float sigma2 = sigma*sigma;
-	float coeff = 1/sqrt(2*TWO_PI*sigma2);
+	// float coeff = 1/sqrt(2*TWO_PI*sigma2);
+
+	// cout << "n: " << n << endl;
+	// cout << "frequency: " << frequency << endl;
 
 	for (int i = 0; i < numOfFrequencies; i++) {
 		float n_i = ofMap(i, 0, numOfFrequencies, n_freq(lowerFrequencyBound), n_freq(upperFrequencyBound), true);
-		frequencyAmplitudes[i] += coeff * exp(-(n_i - n)*(n_i - n) / (2 * sigma2));
+		frequencyAmplitudes[i] += exp(-(n_i - n)*(n_i - n) / (2 * sigma2));
 	}
 }
 

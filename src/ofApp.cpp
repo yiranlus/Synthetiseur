@@ -11,7 +11,7 @@ void ofApp::setup()
 	volume				= 0.1f;
 
 	sigma = 0.1f;
-	numOfFrequencies = 256;
+	numOfFrequencies = 1024;
 	lowerFrequencyBound = 250.0f;
 	upperFrequencyBound = 500.0f;
 	frequencyAmplitudes.assign(numOfFrequencies, 0.0f);
@@ -93,13 +93,6 @@ void ofApp::init_mappedBlackKeyIndices(){
 //--------------------------------------------------------------
 void ofApp::update()
 {
-	frequencyAmplitudes.assign(numOfFrequencies, 0.0f);
-	for (const auto &key: pressedKeys) {
-		activate_frequency(mappedFrequency[key]);
-	}
-	if (!pressedKeys.empty()) {
-		normalize_amplitudes();
-	}
 }
 
 //--------------------------------------------------------------
@@ -202,12 +195,20 @@ void ofApp::keyPressed(int key)
 	if (pressedKeys.find(key) != pressedKeys.end())
 		return;
     pressedKeys.insert(key);
+	activate_frequency(mappedFrequency[key]);
+
+	cout << "Key " << key << " pressed" << endl;
+	cout << "Frequency: " << mappedFrequency[key] << endl;
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key)
 {
 	pressedKeys.erase(key);
+	frequencyAmplitudes.assign(numOfFrequencies, 0.0f);
+	for (const auto &key: pressedKeys) {
+		activate_frequency(mappedFrequency[key]);
+	}
 }
 
 //--------------------------------------------------------------

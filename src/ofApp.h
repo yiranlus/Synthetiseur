@@ -40,9 +40,9 @@ class ofApp : public ofBaseApp{
 
 		ofSoundStream soundStream;
 		int sampleRate;
-		float phase;
-		float phaseAdder;
-		float phaseAdderTarget;
+
+		vector <int> white_keys;
+		vector <int> black_keys;
 
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;

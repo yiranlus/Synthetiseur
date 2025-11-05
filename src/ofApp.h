@@ -7,9 +7,6 @@ using std::vector;
 using std::set;
 using std::map;
 
-#include <iostream>
-using std::cout;
-
 #include "ofMain.h"
 
 class ofApp : public ofBaseApp{
@@ -32,22 +29,24 @@ class ofApp : public ofBaseApp{
 		// void windowResized(int w, int h) override;
 		// void dragEvent(ofDragInfo dragInfo) override;
 		// void gotMessage(ofMessage msg) override;
-
 		void init_mapped_frequencies();
+		void init_mappedWhiteKeyIndices();
+		void init_mappedBlackKeyIndices();
 		void audioOut(ofSoundBuffer & buffer) override;
 
 	private:
-
 		ofSoundStream soundStream;
 		int sampleRate;
-
-		vector <int> white_keys;
-		vector <int> black_keys;
+		float phase;
+		float phaseAdder;
+		float phaseAdderTarget;
 
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;
 		map<int, float> freqPhases;
 		map<int, float> freqPhaseAdders;
+		map<int, int> mappedWhiteKeyIndices;
+		map<int, int> mappedBlackKeyIndices;
 
 		vector<float> lAudio;
 		vector<float> rAudio;

@@ -1,4 +1,4 @@
 # Ignore everything:
 *
 # Except src:
-!*/src*
+!src

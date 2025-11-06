@@ -6,12 +6,13 @@ void ofApp::setup()
 {
 	ofBackground(34, 34, 34);
 
-	int bufferSize		= 128;
+	int bufferSize		= 1024;
 	sampleRate 			= 44100;
-	phase 				= 0;
-	phaseAdder 			= 0.0f;
-	phaseAdderTarget 	= 0.0f;
 	volume				= 0.1f;
+
+	numOfFrequencies = bufferSize;
+	lowerFrequencyBound = 250.0f;
+	upperFrequencyBound = 510.0f;
 
 	lAudio.assign(bufferSize, 0.0);
 	rAudio.assign(bufferSize, 0.0);
@@ -79,7 +80,21 @@ void ofApp::init_mappedBlackKeyIndices(){
 //--------------------------------------------------------------
 void ofApp::update()
 {
+	float delta = (upperFrequencyBound - lowerFrequencyBound) / (numOfFrequencies - 1);
+	frequencyAmp.assign(numOfFrequencies, 0.0f);
 
+	vector<float> ampRealPart(numOfFrequencies);
+	vector<float> ampImagPart(numOfFrequencies);
+	for (int k = 0; k < numOfFrequencies; k++) {
+		for (int n = 0; n < numOfFrequencies; n++) {
+			ampRealPart[k] += lAudio[k] * cos(TWO_PI * k * n / numOfFrequencies);
+			ampImagPart[k] += lAudio[k] * sin(TWO_PI * k * n / numOfFrequencies);
+		}
+		frequencyAmp[k] = sqrt(
+			ampRealPart[k] * ampRealPart[k] +
+			ampImagPart[k] + ampImagPart[k]
+		);
+	}
 }
 
 //--------------------------------------------------------------
@@ -88,12 +103,64 @@ void ofApp::draw()
     ofSetColor(225);
     ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 50, 50);
 
+	// Draw the signal amplitude
+	ofNoFill();
+	ofPushStyle();
+		ofPushMatrix();
+		ofTranslate(32, 64, 0);
+
+		ofSetColor(225);
+		ofDrawBitmapString("Amplitude", 4, 18);
+
+		ofSetLineWidth(1);
+		ofDrawRectangle(0, 0, ofGetWidth()-2*32, 200);
+
+		ofSetColor(245, 58, 135);
+		ofSetLineWidth(3);
+
+			ofBeginShape();
+			for (unsigned int i = 0; i < lAudio.size(); i++){
+				float x =  ofMap(i, 0, lAudio.size(), 0, ofGetWidth()-2*32, false);
+				ofVertex(x, 100 -lAudio[i]*90.0f / volume);
+			}
+			ofEndShape(false);
+
+		ofPopMatrix();
+	ofPopStyle();
+
+	// ----------------------------------------------------------
+	ofNoFill();
+	ofPushStyle();
+		ofPushMatrix();
+		ofTranslate(32, 296, 0);
+
+		ofSetColor(225);
+		ofDrawBitmapString("Frequencies", 4, 18);
+
+		ofSetLineWidth(1);
+		ofDrawRectangle(0, 0, ofGetWidth()-2*32, 200);
+
+		ofSetColor(245, 58, 135);
+		ofSetLineWidth(3);
+
+			ofBeginShape();
+			for (unsigned int i = 1; i < frequencyAmp.size(); i++){
+				float x =  ofMap(i, 0, frequencyAmp.size(), 0, ofGetWidth()-2*32, false);
+				ofVertex(x, 100 -frequencyAmp[i]*10.0f / volume);
+			}
+			ofEndShape(false);
+
+		ofPopMatrix();
+	ofPopStyle();
+
+	// ----------------------------------------------------------
+
     // Setting keyboard properties
-    int x_keyboard = 200;
-    int y_keyboard = 800;
     int key_width = 40;
     int padding = 4;
     int rounding = 5;
+	int x_keyboard = (float) ofGetWidth()/2 - (float) key_width * mappedWhiteKeyIndices.size() / 2;
+    int y_keyboard = 512;
 
 	// Drawing white keys
 	ofFill();

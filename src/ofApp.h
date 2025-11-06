@@ -34,12 +34,18 @@ class ofApp : public ofBaseApp{
 		void init_mappedBlackKeyIndices();
 		void audioOut(ofSoundBuffer & buffer) override;
 
+		inline float n_freq(float frequency) { return (log2(frequency)  - log2(440)) * 12; }
+		inline float freq_n(float n) { return pow(2, n/12.0f) * 440.0f; }
+		void fft_audio();
+
 	private:
 		ofSoundStream soundStream;
 		int sampleRate;
-		float phase;
-		float phaseAdder;
-		float phaseAdderTarget;
+
+		vector<float> frequencyAmp;
+		int numOfFrequencies;
+		float lowerFrequencyBound;
+		float upperFrequencyBound;
 
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;

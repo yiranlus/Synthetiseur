@@ -6,12 +6,13 @@ void ofApp::setup()
 {
 	ofBackground(34, 34, 34);
 
-	int bufferSize		= 128;
+	int bufferSize		= 1024;
 	sampleRate 			= 44100;
-	phase 				= 0;
-	phaseAdder 			= 0.0f;
-	phaseAdderTarget 	= 0.0f;
-	volume				= 0.1f;
+	volume				= 1.0f;
+
+	numOfFrequencies = bufferSize;
+	lowerFrequencyBound = 250.0f;
+	upperFrequencyBound = 510.0f;
 
 	lAudio.assign(bufferSize, 0.0);
 	rAudio.assign(bufferSize, 0.0);
@@ -35,6 +36,11 @@ void ofApp::setup()
     init_mapped_frequencies();
 	init_mappedWhiteKeyIndices();
 	init_mappedBlackKeyIndices();
+
+	for (const auto& [key, freq] : mappedFrequency) {
+		freqPhases[key] = 0.0f;
+		freqPhaseAdderMixers[key] = 0.0f;
+	}
 }
 
 //--------------------------------------------------------------
@@ -79,55 +85,93 @@ void ofApp::init_mappedBlackKeyIndices(){
 //--------------------------------------------------------------
 void ofApp::update()
 {
+	float delta = (upperFrequencyBound - lowerFrequencyBound) / (numOfFrequencies - 1);
+	frequencyAmp.assign(numOfFrequencies, 0.0f);
 
+	vector<float> ampRealPart(numOfFrequencies);
+	vector<float> ampImagPart(numOfFrequencies);
+	for (int k = 0; k < numOfFrequencies; k++) {
+		for (int n = 0; n < numOfFrequencies; n++) {
+			ampRealPart[k] += lAudio[n] * cos(- TWO_PI * k * n / numOfFrequencies);
+			ampImagPart[k] += lAudio[n] * sin(- TWO_PI * k * n / numOfFrequencies);
+		}
+		ampRealPart[k] /= numOfFrequencies;
+		ampImagPart[k] /= numOfFrequencies;
+		frequencyAmp[k] = sqrt(
+			ampRealPart[k] * ampRealPart[k] +
+			ampImagPart[k] * ampImagPart[k]
+		);
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::draw()
 {
     ofSetColor(225);
-    ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 32, 50);
+    ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 50, 50);
 
-	draw_keys();
-	drawSound();
-}
-
-void ofApp::drawSound()
-{
-		// draw the left channel:
-	ofPushStyle();
-	ofPushMatrix();
-	ofTranslate(32, 150, 0);
-
+	// Draw the signal amplitude
 	ofNoFill();
-	ofSetColor(255);
-	ofDrawBitmapString("Sound Wave", 4, 18);
-	
-	ofSetLineWidth(1);
-	ofDrawRectangle(0, 0, 600, 200);
+	ofPushStyle();
+		ofPushMatrix();
+		ofTranslate(32, 64, 0);
 
-	ofSetColor(245, 58, 135);
-	ofSetLineWidth(3);
-				
-	ofBeginShape();
-	for (unsigned int i = 0; i < lAudio.size(); i++){
-		float x =  ofMap(i, 0, lAudio.size(), 0, 600, true);
-		ofVertex(x, 100 -lAudio[i]*180.0f);
-	}
-	ofEndShape(false);
-	ofPopMatrix();
+		ofSetColor(225);
+		ofDrawBitmapString("Amplitude", 4, 18);
+
+		ofSetLineWidth(1);
+		ofDrawRectangle(0, 0, ofGetWidth()-2*32, 200);
+
+		ofSetColor(245, 58, 135);
+		ofSetLineWidth(3);
+
+			ofBeginShape();
+			for (unsigned int i = 0; i < lAudio.size(); i++){
+				float x =  ofMap(i, 0, lAudio.size(), 0, ofGetWidth()-2*32, false);
+				ofVertex(x, 100 -lAudio[i]*180.0f / mappedFrequency.size());
+			}
+			ofEndShape(false);
+
+		ofPopMatrix();
 	ofPopStyle();
-}
 
-//--------------------------------------------------------------
-void ofApp::draw_keys()
-{
-	// Setting keyboard properties
-    int x_keyboard = 32;
-    int y_keyboard = 800;
+	// ----------------------------------------------------------
+	ofNoFill();
+	ofPushStyle();
+		ofPushMatrix();
+		ofTranslate(32, 296, 0);
+
+		ofSetColor(225);
+		ofDrawBitmapString("Frequencies", 4, 18);
+
+		ofSetLineWidth(1);
+		ofDrawRectangle(0, 0, ofGetWidth()-2*32, 200);
+
+		ofSetColor(245, 58, 135);
+		ofSetLineWidth(3);
+
+			ofBeginShape();
+			float n0 = n_freq((float) sampleRate / numOfFrequencies);
+			float n1 = n_freq((float) sampleRate * (numOfFrequencies - 1) / numOfFrequencies);
+			for (int i = 1; i < numOfFrequencies - 1; i++){
+				// float x =  ofMap(i, 0, numOfFrequencies, 0, ofGetWidth()-2*32, false);
+				float n = n_freq((float) sampleRate * i / numOfFrequencies);
+				float x =  ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
+				ofVertex(x, 190 - frequencyAmp[i]*180.0f / volume);
+			}
+			ofEndShape(false);
+
+		ofPopMatrix();
+	ofPopStyle();
+
+	// ----------------------------------------------------------
+
+    // Setting keyboard properties
     int key_width = 40;
     int padding = 4;
     int rounding = 5;
+	int x_keyboard = (float) ofGetWidth()/2 - (float) key_width * mappedWhiteKeyIndices.size() / 2;
+    int y_keyboard = 512;
 
 	// Drawing white keys
 	ofFill();
@@ -137,10 +181,10 @@ void ofApp::draw_keys()
 		{
 			ofSetColor(150,150,150);
 			ofDrawRectRounded(
-				x_keyboard + (index * (key_width + padding)), 
-				y_keyboard, 
-				key_width, 
-				5 * key_width, 
+				x_keyboard + (index * (key_width + padding)),
+				y_keyboard,
+				key_width,
+				5 * key_width,
 				rounding
 			);
 		}
@@ -148,10 +192,10 @@ void ofApp::draw_keys()
 		{
 			ofSetColor(255,255,255);
 			ofDrawRectRounded(
-				x_keyboard + (index * (key_width + padding)), 
-				y_keyboard, 
-				key_width, 
-				5 * key_width, 
+				x_keyboard + (index * (key_width + padding)),
+				y_keyboard,
+				key_width,
+				5 * key_width,
 				rounding
 			);
 		}
@@ -165,8 +209,8 @@ void ofApp::draw_keys()
 			ofSetColor(85,85,85);
 			ofDrawRectRounded(
 				x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
-				y_keyboard, 
-				key_width / 2, 
+				y_keyboard,
+				key_width / 2,
 				7 * key_width / 2,
 				rounding
 			);
@@ -176,8 +220,8 @@ void ofApp::draw_keys()
 			ofSetColor(15,15,15);
 			ofDrawRectRounded(
 				x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
-				y_keyboard, 
-				key_width / 2, 
+				y_keyboard,
+				key_width / 2,
 				7 * key_width / 2,
 				rounding
 			);
@@ -192,15 +236,17 @@ void ofApp::keyPressed(int key)
 		return;
 	if (pressedKeys.find(key) != pressedKeys.end())
 		return;
+
     pressedKeys.insert(key);
     freqPhases[key] = 0.0f;
-    freqPhaseAdders[key] = (mappedFrequency[key] / (float) sampleRate) * glm::two_pi<float>();
+	freqPhaseAdders[key] = (mappedFrequency[key] / (float) sampleRate) * glm::two_pi<float>();
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key)
 {
 	pressedKeys.erase(key);
+	freqPhaseAdders[key] = 0.0f;
 }
 
 //--------------------------------------------------------------
@@ -249,19 +295,23 @@ void ofApp::keyReleased(int key)
 // }
 
 // //--------------------------------------------------------------
-// void ofApp::dragEvent(ofDragInfo dragInfo){ 
+// void ofApp::dragEvent(ofDragInfo dragInfo){
 
 // }
 
 void ofApp::audioOut(ofSoundBuffer & buffer){
-	// sin (n) seems to have trouble when n is very large, so we
-	// keep phase in the range of 0-glm::two_pi<float>() like this:
-
     for (size_t i = 0; i < buffer.getNumFrames(); i++){
         float sample = 0.0f;
-        for (const auto &key: pressedKeys) {
-            freqPhases[key] = fmod(freqPhases[key] + freqPhaseAdders[key], glm::two_pi<float>());
-            sample += sin(freqPhases[key]) / pressedKeys.size();
+        for (const auto &[key, freq] : mappedFrequency) {
+			freqPhaseAdderMixers[key] = 0.95*freqPhaseAdderMixers[key] + 0.05*freqPhaseAdders[key];
+			float newPhase = freqPhases[key];
+
+			// Diminish the phase if the key is not pressed
+			if (pressedKeys.find(key) == pressedKeys.end()) {
+				newPhase *= 0.95;
+			}
+            freqPhases[key] = fmod(newPhase + freqPhaseAdderMixers[key], glm::two_pi<float>());
+            sample += sin(freqPhases[key]);
         }
         lAudio[i] = buffer[i*buffer.getNumChannels()    ] = sample * volume;
         rAudio[i] = buffer[i*buffer.getNumChannels() + 1] = sample * volume;

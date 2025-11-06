@@ -15,7 +15,6 @@ class ofApp : public ofBaseApp{
 		void setup() override;
 		void update() override;
 		void draw() override;
-		void draw_keys();
 		// void exit() override;
 
 		void keyPressed(int key) override;
@@ -34,22 +33,28 @@ class ofApp : public ofBaseApp{
 		void init_mappedWhiteKeyIndices();
 		void init_mappedBlackKeyIndices();
 		void audioOut(ofSoundBuffer & buffer) override;
-		void drawSound();
-		
+
+		inline float n_freq(float frequency) { return (log2(frequency)  - log2(440)) * 12; }
+		inline float freq_n(float n) { return pow(2, n/12.0f) * 440.0f; }
+		void fft_audio();
+
 	private:
 		ofSoundStream soundStream;
 		int sampleRate;
-		float phase;
-		float phaseAdder;
-		float phaseAdderTarget;
+
+		vector<float> frequencyAmp;
+		int numOfFrequencies;
+		float lowerFrequencyBound;
+		float upperFrequencyBound;
 
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;
 		map<int, float> freqPhases;
+		map<int, float> freqPhaseAdderMixers;
 		map<int, float> freqPhaseAdders;
 		map<int, int> mappedWhiteKeyIndices;
 		map<int, int> mappedBlackKeyIndices;
-		
+
 		vector<float> lAudio;
 		vector<float> rAudio;
 		float volume;

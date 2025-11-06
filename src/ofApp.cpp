@@ -87,12 +87,14 @@ void ofApp::update()
 	vector<float> ampImagPart(numOfFrequencies);
 	for (int k = 0; k < numOfFrequencies; k++) {
 		for (int n = 0; n < numOfFrequencies; n++) {
-			ampRealPart[k] += lAudio[k] * cos(TWO_PI * k * n / numOfFrequencies);
-			ampImagPart[k] += lAudio[k] * sin(TWO_PI * k * n / numOfFrequencies);
+			ampRealPart[k] += lAudio[n] * cos(- TWO_PI * k * n / numOfFrequencies);
+			ampImagPart[k] += lAudio[n] * sin(- TWO_PI * k * n / numOfFrequencies);
 		}
+		ampRealPart[k] /= numOfFrequencies;
+		ampImagPart[k] /= numOfFrequencies;
 		frequencyAmp[k] = sqrt(
 			ampRealPart[k] * ampRealPart[k] +
-			ampImagPart[k] + ampImagPart[k]
+			ampImagPart[k] * ampImagPart[k]
 		);
 	}
 }
@@ -121,7 +123,7 @@ void ofApp::draw()
 			ofBeginShape();
 			for (unsigned int i = 0; i < lAudio.size(); i++){
 				float x =  ofMap(i, 0, lAudio.size(), 0, ofGetWidth()-2*32, false);
-				ofVertex(x, 100 -lAudio[i]*90.0f / volume);
+				ofVertex(x, 100 -lAudio[i]*90.0f / volume / pressedKeys.size());
 			}
 			ofEndShape(false);
 
@@ -144,9 +146,13 @@ void ofApp::draw()
 		ofSetLineWidth(3);
 
 			ofBeginShape();
-			for (unsigned int i = 1; i < frequencyAmp.size(); i++){
-				float x =  ofMap(i, 0, frequencyAmp.size(), 0, ofGetWidth()-2*32, false);
-				ofVertex(x, 100 -frequencyAmp[i]*10.0f / volume);
+			float n0 = n_freq((float) sampleRate / numOfFrequencies);
+			float n1 = n_freq((float) sampleRate * (numOfFrequencies - 1) / numOfFrequencies);
+			for (int i = 1; i < numOfFrequencies - 1; i++){
+				// float x =  ofMap(i, 0, numOfFrequencies, 0, ofGetWidth()-2*32, false);
+				float n = n_freq((float) sampleRate * i / numOfFrequencies);
+				float x =  ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
+				ofVertex(x, 190 - frequencyAmp[i]*180.0f / volume);
 			}
 			ofEndShape(false);
 
@@ -294,7 +300,7 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
         float sample = 0.0f;
         for (const auto &key: pressedKeys) {
             freqPhases[key] = fmod(freqPhases[key] + freqPhaseAdders[key], glm::two_pi<float>());
-            sample += sin(freqPhases[key]) / pressedKeys.size();
+            sample += sin(freqPhases[key]);
         }
         lAudio[i] = buffer[i*buffer.getNumChannels()    ] = sample * volume;
         rAudio[i] = buffer[i*buffer.getNumChannels() + 1] = sample * volume;

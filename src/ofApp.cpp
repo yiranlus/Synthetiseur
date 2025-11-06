@@ -105,12 +105,7 @@ void ofApp::update()
 }
 
 //--------------------------------------------------------------
-void ofApp::draw()
-{
-    ofSetColor(225);
-    ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 50, 50);
-
-	// Draw the signal amplitude
+void ofApp::draw_amplitude() {
 	ofNoFill();
 	ofPushStyle();
 		ofPushMatrix();
@@ -134,8 +129,9 @@ void ofApp::draw()
 
 		ofPopMatrix();
 	ofPopStyle();
+}
 
-	// ----------------------------------------------------------
+void ofApp::draw_frequencies() {
 	ofNoFill();
 	ofPushStyle();
 		ofPushMatrix();
@@ -163,10 +159,9 @@ void ofApp::draw()
 
 		ofPopMatrix();
 	ofPopStyle();
+}
 
-	// ----------------------------------------------------------
-
-    // Setting keyboard properties
+void ofApp::draw_keyboard() {
     int key_width = 40;
     int padding = 4;
     int rounding = 5;
@@ -227,6 +222,17 @@ void ofApp::draw()
 			);
 		}
 	}
+}
+
+//--------------------------------------------------------------
+void ofApp::draw()
+{
+    ofSetColor(225);
+    ofDrawBitmapString("SUPER MEGA SYNTHESIZER OF THE DEAD", 50, 50);
+
+	draw_amplitude();
+	draw_frequencies();
+	draw_keyboard();
 }
 
 //--------------------------------------------------------------

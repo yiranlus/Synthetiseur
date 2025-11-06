@@ -15,6 +15,9 @@ class ofApp : public ofBaseApp{
 		void setup() override;
 		void update() override;
 		void draw() override;
+		void draw_amplitude();
+		void draw_frequencies();
+		void draw_keyboard();
 		// void exit() override;
 
 		void keyPressed(int key) override;
@@ -36,7 +39,6 @@ class ofApp : public ofBaseApp{
 
 		inline float n_freq(float frequency) { return (log2(frequency)  - log2(440)) * 12; }
 		inline float freq_n(float n) { return pow(2, n/12.0f) * 440.0f; }
-		void fft_audio();
 
 	private:
 		ofSoundStream soundStream;

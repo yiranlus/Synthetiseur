@@ -6,16 +6,16 @@
 	},
 	"windows" : {
 		"options": {
-			"shell": {
-				"executable": "C:\\msys64\\msys2_shell.cmd",
-				"args": [
-					"-defterm",
-					"-mingw64",
-					"-no-start",
-					"-here",
-					"-shell bash -c"
-				]
-			}
+			// "shell": {
+			// 	"executable": "C:\\msys64\\msys2_shell.cmd",
+			// 	"args": [
+			// 		"-defterm",
+			// 		"-mingw64",
+			// 		"-no-start",
+			// 		"-here",
+			// 		"-shell bash -c"
+			// 	]
+			// }
 		}
 	},
 	"problemMatcher": {
@@ -44,49 +44,62 @@
 		{
 			"type": "shell",
 			"label": "Build RELEASE",
-			"command": "make -j -s 2>&1"
-			// "windows" : {
-			// 	"command" : "msbuild"
-			// }
+			"command": "make -j -s 2>&1",
+			"windows": {
+				"command": "msbuild /p:Configuration=Release"
+			}
 		},
 		{
 			"type": "shell",
 			"label": "Run RELEASE",
 			"command": "make RunRelease >&1",
-			"windows" : {
-				"command" : "bin/*.exe"
+			"windows": {
+				"command": "bin\\${workspaceFolderBasename}.exe"
 			}
 		},
 		{
 			"label": "Build and Run Release",
-			"dependsOn": ["Build RELEASE", "Run RELEASE"],
+			"dependsOn": [
+				"Build RELEASE",
+				"Run RELEASE"
+			],
 			"dependsOrder": "sequence",
 			"group": {
-				"kind": "build",
+				"kind": "test",
 				"isDefault": true
 			}
 		},
 		{
 			"type": "shell",
 			"label": "Build DEBUG",
-			"command": "make Debug -j -s 2>&1 || exit 1"
+			"command": "make Debug -j -s 2>&1 || exit 1",
+			"windows": {
+				"command": "msbuild /p:Configuration=Debug"
+			}
 		},
-
 		{
 			"type": "shell",
 			"label": "Clean DEBUG",
-			"command": "make CleanDebug"
+			"command": "make CleanDebug",
+			"windows": {
+				"command": "msbuild -t:Clean /p:Configuration=Debug"
+			}
 		},
-
 		{
 			"type": "shell",
 			"label": "Clean RELEASE",
-			"command": "make CleanRelease"
+			"command": "make CleanRelease",
+			"windows": {
+				"command": "msbuild -t:Clean /p:Configuration=Release"
+			}
 		},
 		{
 			"type": "shell",
 			"label": "Clean ALL",
-			"command": "make clean"
+			"command": "make clean",
+			"windows": {
+				"command": "msbuild -t:Clean"
+			}
 		}
 	]
 }

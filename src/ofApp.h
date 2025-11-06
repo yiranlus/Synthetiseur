@@ -50,6 +50,7 @@ class ofApp : public ofBaseApp{
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;
 		map<int, float> freqPhases;
+		map<int, float> freqPhaseAdderMixers;
 		map<int, float> freqPhaseAdders;
 		map<int, int> mappedWhiteKeyIndices;
 		map<int, int> mappedBlackKeyIndices;

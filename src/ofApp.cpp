@@ -8,7 +8,7 @@ void ofApp::setup()
 
 	int bufferSize		= 1024;
 	sampleRate 			= 44100;
-	volume				= 0.1f;
+	volume				= 1.0f;
 
 	numOfFrequencies = bufferSize;
 	lowerFrequencyBound = 250.0f;
@@ -36,6 +36,11 @@ void ofApp::setup()
     init_mapped_frequencies();
 	init_mappedWhiteKeyIndices();
 	init_mappedBlackKeyIndices();
+
+	for (const auto& [key, freq] : mappedFrequency) {
+		freqPhases[key] = 0.0f;
+		freqPhaseAdderMixers[key] = 0.0f;
+	}
 }
 
 //--------------------------------------------------------------
@@ -123,7 +128,7 @@ void ofApp::draw()
 			ofBeginShape();
 			for (unsigned int i = 0; i < lAudio.size(); i++){
 				float x =  ofMap(i, 0, lAudio.size(), 0, ofGetWidth()-2*32, false);
-				ofVertex(x, 100 -lAudio[i]*90.0f / volume / pressedKeys.size());
+				ofVertex(x, 100 -lAudio[i]*180.0f / mappedFrequency.size());
 			}
 			ofEndShape(false);
 
@@ -231,15 +236,17 @@ void ofApp::keyPressed(int key)
 		return;
 	if (pressedKeys.find(key) != pressedKeys.end())
 		return;
+
     pressedKeys.insert(key);
     freqPhases[key] = 0.0f;
-    freqPhaseAdders[key] = (mappedFrequency[key] / (float) sampleRate) * glm::two_pi<float>();
+	freqPhaseAdders[key] = (mappedFrequency[key] / (float) sampleRate) * glm::two_pi<float>();
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key)
 {
 	pressedKeys.erase(key);
+	freqPhaseAdders[key] = 0.0f;
 }
 
 //--------------------------------------------------------------
@@ -293,13 +300,17 @@ void ofApp::keyReleased(int key)
 // }
 
 void ofApp::audioOut(ofSoundBuffer & buffer){
-	// sin (n) seems to have trouble when n is very large, so we
-	// keep phase in the range of 0-glm::two_pi<float>() like this:
-
     for (size_t i = 0; i < buffer.getNumFrames(); i++){
         float sample = 0.0f;
-        for (const auto &key: pressedKeys) {
-            freqPhases[key] = fmod(freqPhases[key] + freqPhaseAdders[key], glm::two_pi<float>());
+        for (const auto &[key, freq] : mappedFrequency) {
+			freqPhaseAdderMixers[key] = 0.95*freqPhaseAdderMixers[key] + 0.05*freqPhaseAdders[key];
+			float newPhase = freqPhases[key];
+
+			// Diminish the phase if the key is not pressed
+			if (pressedKeys.find(key) == pressedKeys.end()) {
+				newPhase *= 0.95;
+			}
+            freqPhases[key] = fmod(newPhase + freqPhaseAdderMixers[key], glm::two_pi<float>());
             sample += sin(freqPhases[key]);
         }
         lAudio[i] = buffer[i*buffer.getNumChannels()    ] = sample * volume;

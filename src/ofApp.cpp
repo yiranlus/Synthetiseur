@@ -337,7 +337,7 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
 			float newPhase = freqPhases[key];
 
 			// Diminish the phase if the key is not pressed
-			if (pressedKeys.find(key) == pressedKeys.end()) {
+			if (pressedKeys.find(key) == pressedKeys.end() && !sustain) {
 				newPhase *= 0.95;
 			}
             freqPhases[key] = fmod(newPhase + freqPhaseAdderMixers[key], glm::two_pi<float>());

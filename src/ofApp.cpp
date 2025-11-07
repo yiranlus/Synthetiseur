@@ -9,6 +9,7 @@ void ofApp::setup()
 	int bufferSize		= 1024;
 	sampleRate 			= 44100;
 	volume				= 0.5f;
+	lambda 				= 3;
 
 	baseFrequency = 440.0f;
 	soundType = SineSound;
@@ -17,8 +18,6 @@ void ofApp::setup()
 	// lowerFrequencyBound = 250.0f;
 	// upperFrequencyBound = 510.0f;
 	numOfHarmonics = 3;
-
-	sustain = false;
 
 	lAudio.assign(bufferSize, 0.0);
 	rAudio.assign(bufferSize, 0.0);
@@ -44,6 +43,7 @@ void ofApp::setup()
 	init_mappedBlackKeyIndices();
 
 	for (const auto& [key, freq] : mappedFrequency) {
+		freqVolumes[key] = 0.0f;
 		freqPhases[key] = 0.0f;
 		freqPhaseAdderMixers[key] = 0.0f;
 	}
@@ -129,7 +129,7 @@ void ofApp::draw_amplitude() {
 			ofBeginShape();
 			for (unsigned int i = 0; i < lAudio.size(); i++){
 				float x =  ofMap(i, 0, lAudio.size(), 0, ofGetWidth()-2*32, false);
-				ofVertex(x, 100 -lAudio[i]*180.0f);
+				ofVertex(x, 100 -lAudio[i]*180.0f / numOfHarmonics);
 			}
 			ofEndShape(false);
 
@@ -221,7 +221,7 @@ void ofApp::draw()
 	ofSetColor(225);
 	string reportString =
 		"volume: ("+ofToString(volume, 2)+") modify with -/+ keys\n" +
-		"sustain: "+(sustain?"true":"false")+" toggle with 'a' key\n" +
+		"diminish level: "+ofToString(lambda)+" modify with 9/0 keys\n" +
 		"sound type: "+(
 			soundType == SineSound?
 				"sine":(
@@ -243,14 +243,6 @@ void ofApp::keyPressed(int key)
 	} else if (key == '+' || key == '=' ){
 		volume += 0.05;
 		volume = std::min(volume, 1.f);
-	} else if (key == 'a') {
-		sustain = !sustain;
-		if (!sustain) {
-			for (const auto &[key, freq] : mappedFrequency) {
-				if (pressedKeys.find(key) == pressedKeys.end())
-					freqPhaseAdders[key] = 0.0f;
-			}
-		}
 	} else if (key == '1') { // Change sound type
 		soundType = SineSound;
 	} else if (key == '2') {
@@ -268,6 +260,12 @@ void ofApp::keyPressed(int key)
 	} else if (key == '.') {
 		baseFrequency = freq_n(1, baseFrequency);
 		init_mapped_frequencies();
+	} else if (key == '9') {
+		lambda --;
+		lambda = std::max(lambda, 0.0f);
+	} else if (key == '0') {
+		lambda ++;
+		lambda = std::min(lambda, 10.0f);
 	}
 
 	if (mappedFrequency.find(key) == mappedFrequency.end())
@@ -276,7 +274,8 @@ void ofApp::keyPressed(int key)
 		return;
 
     pressedKeys.insert(key);
-    freqPhases[key] = 0.0f;
+    // freqPhases[key] = 0.0f;
+	freqVolumes[key] = 1.0f;
 	freqPhaseAdders[key] = (mappedFrequency[key] / (float) sampleRate) * glm::two_pi<float>();
 }
 
@@ -284,9 +283,6 @@ void ofApp::keyPressed(int key)
 void ofApp::keyReleased(int key)
 {
 	pressedKeys.erase(key);
-
-	if (!sustain)
-		freqPhaseAdders[key] = 0.0f;
 }
 
 //--------------------------------------------------------------
@@ -370,24 +366,24 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
         float sample = 0.0f;
         for (const auto &[key, freq] : mappedFrequency) {
 			freqPhaseAdderMixers[key] = 0.95*freqPhaseAdderMixers[key] + 0.05*freqPhaseAdders[key];
-			float newPhase = freqPhases[key];
 
 			// Diminish the phase if the key is not pressed
-			if (pressedKeys.find(key) == pressedKeys.end() && !sustain) {
-				newPhase *= 0.95;
+			if (pressedKeys.find(key) == pressedKeys.end()) {
+				freqVolumes[key] *= exp(-lambda * 1.0f / sampleRate);
 			}
-            freqPhases[key] = fmod(newPhase + freqPhaseAdderMixers[key], glm::two_pi<float>());
+
+            freqPhases[key] = fmod(freqPhases[key] + freqPhaseAdderMixers[key], TWO_PI);
 
 			for (int h = 1; h <= numOfHarmonics; h++) {
 				switch (soundType) {
 				case SineSound:
-					sample += sin(h * freqPhases[key]) / mappedFrequency.size();
+					sample += freqVolumes[key] * sin(h * freqPhases[key]) / mappedFrequency.size();
 					break;
 				case TriangleSound:
-					sample += triangle(h * freqPhases[key]) / mappedFrequency.size();
+					sample += freqVolumes[key] * triangle(h * freqPhases[key]) / mappedFrequency.size();
 					break;
 				case RectangleSound:
-					sample += rectangle(h * freqPhases[key]) / mappedFrequency.size();
+					sample += freqVolumes[key] * rectangle(h * freqPhases[key]) / mappedFrequency.size();
 					break;
 				}
 			}

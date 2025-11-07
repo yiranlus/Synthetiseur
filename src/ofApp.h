@@ -70,7 +70,10 @@ class ofApp : public ofBaseApp{
 		map<int, int> mappedWhiteKeyIndices;
 		map<int, int> mappedBlackKeyIndices;
 
+		float lambda; // volume decay rate
+		float volume;
+		map<int, float> freqVolumes;
+
 		vector<float> lAudio;
 		vector<float> rAudio;
-		float volume;
 };

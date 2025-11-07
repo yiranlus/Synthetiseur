@@ -175,54 +175,34 @@ void ofApp::draw_keyboard() {
 	for (const auto& [key, index] : mappedWhiteKeyIndices)
 	{
 		if (pressedKeys.find(key) != pressedKeys.end())
-		{
 			ofSetColor(150,150,150);
-			ofDrawRectRounded(
-				x_keyboard + (index * (key_width + padding)),
-				y_keyboard,
-				key_width,
-				5 * key_width,
-				rounding
-			);
-		}
 		else
-		{
 			ofSetColor(255,255,255);
-			ofDrawRectRounded(
-				x_keyboard + (index * (key_width + padding)),
-				y_keyboard,
-				key_width,
-				5 * key_width,
-				rounding
-			);
-		}
+
+		ofDrawRectRounded(
+			x_keyboard + (index * (key_width + padding)),
+			y_keyboard,
+			key_width,
+			5 * key_width,
+			rounding
+		);
 	}
 
 	// Drawing black keys
 	for (const auto& [key, index] : mappedBlackKeyIndices)
 	{
 		if (pressedKeys.find(key) != pressedKeys.end())
-		{
 			ofSetColor(85,85,85);
-			ofDrawRectRounded(
-				x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
-				y_keyboard,
-				key_width / 2,
-				7 * key_width / 2,
-				rounding
-			);
-		}
 		else
-		{
 			ofSetColor(15,15,15);
-			ofDrawRectRounded(
-				x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
-				y_keyboard,
-				key_width / 2,
-				7 * key_width / 2,
-				rounding
-			);
-		}
+			
+		ofDrawRectRounded(
+			x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
+			y_keyboard,
+			key_width / 2,
+			7 * key_width / 2,
+			rounding
+		);
 	}
 }
 

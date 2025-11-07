@@ -56,6 +56,7 @@ class ofApp : public ofBaseApp{
 		int numOfFrequencies;
 		// float lowerFrequencyBound;
 		// float upperFrequencyBound;
+		int numOfHarmonics;
 
 		bool sustain;
 		SoundType soundType;

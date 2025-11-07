@@ -16,6 +16,7 @@ void ofApp::setup()
 	numOfFrequencies = bufferSize;
 	// lowerFrequencyBound = 250.0f;
 	// upperFrequencyBound = 510.0f;
+	numOfHarmonics = 3;
 
 	sustain = false;
 
@@ -155,9 +156,9 @@ void ofApp::draw_frequencies() {
 			float n0 = n_freq((float) sampleRate / numOfFrequencies);
 			float n1 = n_freq((float) sampleRate * 0.5f);
 			for (int i = 1; i < (numOfFrequencies / 2); i++){
-				// float x =  ofMap(i, 0, (numOfFrequencies / 2), 0, ofGetWidth()-2*32, false);
-				float n = n_freq((float) sampleRate * i / numOfFrequencies);
-				float x = ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
+				float x =  ofMap(i, 0, (numOfFrequencies / 2), 0, ofGetWidth()-2*32, false);
+				// float n = n_freq((float) sampleRate * i / numOfFrequencies);
+				// float x = ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
 				ofVertex(x, 190 - frequencyAmp[i]*180.0f * mappedFrequency.size());
 			}
 			ofEndShape(false);
@@ -227,7 +228,8 @@ void ofApp::draw()
 					soundType == TriangleSound?
 						"triangle":"rectangle"
 				)
-		)+"\n            toggle with 1/2/3 keys";
+		)+"\n            toggle with 1/2/3 keys\n" +
+		"#harmonics: "+ofToString(numOfHarmonics)+" toggle with [ and ] keys";
 	ofDrawBitmapString(reportString, 32, 579);
 }
 
@@ -254,6 +256,11 @@ void ofApp::keyPressed(int key)
 		soundType = TriangleSound;
 	} else if (key == '3') {
 		soundType = RectangleSound;
+	} else if (key == '[') {
+		numOfHarmonics --;
+		numOfHarmonics = std::max(numOfHarmonics, 1);
+	} else if (key == ']') {
+		numOfHarmonics ++;
 	}
 
 	if (mappedFrequency.find(key) == mappedFrequency.end())
@@ -364,16 +371,18 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
 			}
             freqPhases[key] = fmod(newPhase + freqPhaseAdderMixers[key], glm::two_pi<float>());
 
-			switch (soundType) {
-			case SineSound:
-            	sample += sin(freqPhases[key]) / mappedFrequency.size();
-				break;
-			case TriangleSound:
-				sample += triangle(freqPhases[key]) / mappedFrequency.size();
-				break;
-			case RectangleSound:
-				sample += rectangle(freqPhases[key]) / mappedFrequency.size();
-				break;
+			for (int h = 1; h <= numOfHarmonics; h++) {
+				switch (soundType) {
+				case SineSound:
+					sample += sin(h * freqPhases[key]) / mappedFrequency.size();
+					break;
+				case TriangleSound:
+					sample += triangle(h * freqPhases[key]) / mappedFrequency.size();
+					break;
+				case RectangleSound:
+					sample += rectangle(h * freqPhases[key]) / mappedFrequency.size();
+					break;
+				}
 			}
         }
         lAudio[i] = buffer[i*buffer.getNumChannels()    ] = sample * volume;

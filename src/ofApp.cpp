@@ -8,7 +8,7 @@ void ofApp::setup()
 
 	int bufferSize		= 1024;
 	sampleRate 			= 44100;
-	volume				= 1.0f;
+	volume				= 0.5f;
 
 	baseFrequency = 440.0f;
 	soundType = SineSound;
@@ -156,9 +156,9 @@ void ofApp::draw_frequencies() {
 			float n0 = n_freq((float) sampleRate / numOfFrequencies);
 			float n1 = n_freq((float) sampleRate * 0.5f);
 			for (int i = 1; i < (numOfFrequencies / 2); i++){
-				float x =  ofMap(i, 0, (numOfFrequencies / 2), 0, ofGetWidth()-2*32, false);
-				// float n = n_freq((float) sampleRate * i / numOfFrequencies);
-				// float x = ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
+				// float x =  ofMap(i, 0, (numOfFrequencies / 2), 0, ofGetWidth()-2*32, false);
+				float n = n_freq((float) sampleRate * i / numOfFrequencies);
+				float x = ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
 				ofVertex(x, 190 - frequencyAmp[i]*180.0f * mappedFrequency.size());
 			}
 			ofEndShape(false);
@@ -229,7 +229,8 @@ void ofApp::draw()
 						"triangle":"rectangle"
 				)
 		)+"\n            toggle with 1/2/3 keys\n" +
-		"#harmonics: "+ofToString(numOfHarmonics)+" toggle with [ and ] keys";
+		"#harmonics: "+ofToString(numOfHarmonics)+" change with [ and ] keys\n" +
+		"base freq: "+ofToString(baseFrequency)+" change with , and . keys";
 	ofDrawBitmapString(reportString, 32, 579);
 }
 
@@ -250,17 +251,23 @@ void ofApp::keyPressed(int key)
 					freqPhaseAdders[key] = 0.0f;
 			}
 		}
-	} else if (key == '1') {
+	} else if (key == '1') { // Change sound type
 		soundType = SineSound;
 	} else if (key == '2') {
 		soundType = TriangleSound;
 	} else if (key == '3') {
 		soundType = RectangleSound;
-	} else if (key == '[') {
+	} else if (key == '[') { // Change the number of harmonics
 		numOfHarmonics --;
 		numOfHarmonics = std::max(numOfHarmonics, 1);
 	} else if (key == ']') {
 		numOfHarmonics ++;
+	} else if (key == ',') {
+		baseFrequency = freq_n(-1, baseFrequency);
+		init_mapped_frequencies();
+	} else if (key == '.') {
+		baseFrequency = freq_n(1, baseFrequency);
+		init_mapped_frequencies();
 	}
 
 	if (mappedFrequency.find(key) == mappedFrequency.end())

@@ -10,6 +10,9 @@ void ofApp::setup()
 	sampleRate 			= 44100;
 	volume				= 1.0f;
 
+	baseFrequency = 440.0f;
+	soundType = SineSound;
+
 	numOfFrequencies = bufferSize;
 	// lowerFrequencyBound = 250.0f;
 	// upperFrequencyBound = 510.0f;
@@ -47,18 +50,18 @@ void ofApp::setup()
 
 //--------------------------------------------------------------
 void ofApp::init_mapped_frequencies(){
-    mappedFrequency['s'] = 261.63f; // C
-    mappedFrequency['e'] = 277.18f; // C#
-    mappedFrequency['d'] = 293.66f; // D
-    mappedFrequency['r'] = 311.13f; // D#
-    mappedFrequency['f'] = 329.63f; // E
-    mappedFrequency['g'] = 349.23f; // F
-    mappedFrequency['y'] = 369.99f; // F#
-    mappedFrequency['h'] = 392.00f; // G
-    mappedFrequency['u'] = 415.30f; // G#
-    mappedFrequency['j'] = 440.00f; // A
-    mappedFrequency['i'] = 466.16f; // A#
-    mappedFrequency['k'] = 493.88f; // B
+    mappedFrequency['s'] = freq_n(-9, baseFrequency); // C
+    mappedFrequency['e'] = freq_n(-8, baseFrequency); // C#
+    mappedFrequency['d'] = freq_n(-7, baseFrequency); // D
+    mappedFrequency['r'] = freq_n(-6, baseFrequency); // D#
+    mappedFrequency['f'] = freq_n(-5, baseFrequency); // E
+    mappedFrequency['g'] = freq_n(-4, baseFrequency); // F
+    mappedFrequency['y'] = freq_n(-3, baseFrequency); // F#
+    mappedFrequency['h'] = freq_n(-2, baseFrequency); // G
+    mappedFrequency['u'] = freq_n(-1, baseFrequency); // G#
+    mappedFrequency['j'] = freq_n(0, baseFrequency); // A
+    mappedFrequency['i'] = freq_n(1, baseFrequency); // A#
+    mappedFrequency['k'] = freq_n(2, baseFrequency); // B
 }
 
 //--------------------------------------------------------------
@@ -150,11 +153,11 @@ void ofApp::draw_frequencies() {
 
 			ofBeginShape();
 			float n0 = n_freq((float) sampleRate / numOfFrequencies);
-			float n1 = n_freq((float) sampleRate * (numOfFrequencies - 1) / numOfFrequencies);
-			for (int i = 1; i < numOfFrequencies - 1; i++){
-				// float x =  ofMap(i, 0, numOfFrequencies, 0, ofGetWidth()-2*32, false);
+			float n1 = n_freq((float) sampleRate * 0.5f);
+			for (int i = 1; i < (numOfFrequencies / 2); i++){
+				// float x =  ofMap(i, 0, (numOfFrequencies / 2), 0, ofGetWidth()-2*32, false);
 				float n = n_freq((float) sampleRate * i / numOfFrequencies);
-				float x =  ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
+				float x = ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
 				ofVertex(x, 190 - frequencyAmp[i]*180.0f * mappedFrequency.size());
 			}
 			ofEndShape(false);
@@ -175,54 +178,32 @@ void ofApp::draw_keyboard() {
 	for (const auto& [key, index] : mappedWhiteKeyIndices)
 	{
 		if (pressedKeys.find(key) != pressedKeys.end())
-		{
 			ofSetColor(150,150,150);
-			ofDrawRectRounded(
-				x_keyboard + (index * (key_width + padding)),
-				y_keyboard,
-				key_width,
-				5 * key_width,
-				rounding
-			);
-		}
 		else
-		{
 			ofSetColor(255,255,255);
-			ofDrawRectRounded(
-				x_keyboard + (index * (key_width + padding)),
-				y_keyboard,
-				key_width,
-				5 * key_width,
-				rounding
-			);
-		}
+		ofDrawRectRounded(
+			x_keyboard + (index * (key_width + padding)),
+			y_keyboard,
+			key_width,
+			5 * key_width,
+			rounding
+		);
 	}
 
 	// Drawing black keys
 	for (const auto& [key, index] : mappedBlackKeyIndices)
 	{
 		if (pressedKeys.find(key) != pressedKeys.end())
-		{
 			ofSetColor(85,85,85);
-			ofDrawRectRounded(
-				x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
-				y_keyboard,
-				key_width / 2,
-				7 * key_width / 2,
-				rounding
-			);
-		}
 		else
-		{
 			ofSetColor(15,15,15);
-			ofDrawRectRounded(
-				x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
-				y_keyboard,
-				key_width / 2,
-				7 * key_width / 2,
-				rounding
-			);
-		}
+		ofDrawRectRounded(
+			x_keyboard + (1.5 * key_width + padding)/2 + (index * (key_width + padding)),
+			y_keyboard,
+			key_width / 2,
+			7 * key_width / 2,
+			rounding
+		);
 	}
 }
 
@@ -237,7 +218,16 @@ void ofApp::draw()
 	draw_keyboard();
 
 	ofSetColor(225);
-	string reportString = "volume: ("+ofToString(volume, 2)+") modify with -/+ keys\nsustain: "+(sustain?"true":"false")+" toggle with 'a' key";
+	string reportString =
+		"volume: ("+ofToString(volume, 2)+") modify with -/+ keys\n" +
+		"sustain: "+(sustain?"true":"false")+" toggle with 'a' key\n" +
+		"sound type: "+(
+			soundType == SineSound?
+				"sine":(
+					soundType == TriangleSound?
+						"triangle":"rectangle"
+				)
+		)+"\n            toggle with 1/2/3 keys";
 	ofDrawBitmapString(reportString, 32, 579);
 }
 
@@ -258,6 +248,12 @@ void ofApp::keyPressed(int key)
 					freqPhaseAdders[key] = 0.0f;
 			}
 		}
+	} else if (key == '1') {
+		soundType = SineSound;
+	} else if (key == '2') {
+		soundType = TriangleSound;
+	} else if (key == '3') {
+		soundType = RectangleSound;
 	}
 
 	if (mappedFrequency.find(key) == mappedFrequency.end())
@@ -329,6 +325,32 @@ void ofApp::keyReleased(int key)
 
 // }
 
+//--------------------------------------------------------------
+
+float triangle(float phase) {
+	if (phase < TWO_PI / 4.0f) {
+		return (2.0f / PI) * phase;
+	} else if (phase < 3.0f * TWO_PI / 4.0f) {
+		return - (2.0f / PI) * (phase - TWO_PI / 2.0f);
+	} else {
+		return (2.0f / PI) * (phase - TWO_PI);
+	}
+}
+
+float rectangle(float phase, float margin = 0.1f) {
+	if (phase < margin) {
+		return 1.0f / margin * phase;
+	} else if (phase < TWO_PI / 2.0f - margin) {
+		return 1.0f;
+	} else if (phase < TWO_PI / 2.0f + margin) {
+		return -1.0f / margin * (phase - TWO_PI / 2.0f);
+	} else if (phase < TWO_PI - margin) {
+		return -1.0f;
+	} else {
+		return 1.0f / margin * (phase - TWO_PI);
+	}
+}
+
 void ofApp::audioOut(ofSoundBuffer & buffer){
     for (size_t i = 0; i < buffer.getNumFrames(); i++){
         float sample = 0.0f;
@@ -341,7 +363,18 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
 				newPhase *= 0.95;
 			}
             freqPhases[key] = fmod(newPhase + freqPhaseAdderMixers[key], glm::two_pi<float>());
-            sample += sin(freqPhases[key]) / mappedFrequency.size();
+
+			switch (soundType) {
+			case SineSound:
+            	sample += sin(freqPhases[key]) / mappedFrequency.size();
+				break;
+			case TriangleSound:
+				sample += triangle(freqPhases[key]) / mappedFrequency.size();
+				break;
+			case RectangleSound:
+				sample += rectangle(freqPhases[key]) / mappedFrequency.size();
+				break;
+			}
         }
         lAudio[i] = buffer[i*buffer.getNumChannels()    ] = sample * volume;
         rAudio[i] = buffer[i*buffer.getNumChannels() + 1] = sample * volume;

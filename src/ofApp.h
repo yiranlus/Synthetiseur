@@ -46,8 +46,10 @@ class ofApp : public ofBaseApp{
 
 		vector<float> frequencyAmp;
 		int numOfFrequencies;
-		float lowerFrequencyBound;
-		float upperFrequencyBound;
+		// float lowerFrequencyBound;
+		// float upperFrequencyBound;
+
+		bool sustain;
 
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;

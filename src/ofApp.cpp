@@ -11,8 +11,10 @@ void ofApp::setup()
 	volume				= 1.0f;
 
 	numOfFrequencies = bufferSize;
-	lowerFrequencyBound = 250.0f;
-	upperFrequencyBound = 510.0f;
+	// lowerFrequencyBound = 250.0f;
+	// upperFrequencyBound = 510.0f;
+
+	sustain = false;
 
 	lAudio.assign(bufferSize, 0.0);
 	rAudio.assign(bufferSize, 0.0);
@@ -85,7 +87,7 @@ void ofApp::init_mappedBlackKeyIndices(){
 //--------------------------------------------------------------
 void ofApp::update()
 {
-	float delta = (upperFrequencyBound - lowerFrequencyBound) / (numOfFrequencies - 1);
+	// float delta = (upperFrequencyBound - lowerFrequencyBound) / (numOfFrequencies - 1);
 	frequencyAmp.assign(numOfFrequencies, 0.0f);
 
 	vector<float> ampRealPart(numOfFrequencies);
@@ -123,7 +125,7 @@ void ofApp::draw_amplitude() {
 			ofBeginShape();
 			for (unsigned int i = 0; i < lAudio.size(); i++){
 				float x =  ofMap(i, 0, lAudio.size(), 0, ofGetWidth()-2*32, false);
-				ofVertex(x, 100 -lAudio[i]*180.0f / mappedFrequency.size());
+				ofVertex(x, 100 -lAudio[i]*180.0f);
 			}
 			ofEndShape(false);
 
@@ -153,7 +155,7 @@ void ofApp::draw_frequencies() {
 				// float x =  ofMap(i, 0, numOfFrequencies, 0, ofGetWidth()-2*32, false);
 				float n = n_freq((float) sampleRate * i / numOfFrequencies);
 				float x =  ofMap(n, n0, n1, 0, ofGetWidth()-2*32, false);
-				ofVertex(x, 190 - frequencyAmp[i]*180.0f / volume);
+				ofVertex(x, 190 - frequencyAmp[i]*180.0f * mappedFrequency.size());
 			}
 			ofEndShape(false);
 
@@ -233,11 +235,31 @@ void ofApp::draw()
 	draw_amplitude();
 	draw_frequencies();
 	draw_keyboard();
+
+	ofSetColor(225);
+	string reportString = "volume: ("+ofToString(volume, 2)+") modify with -/+ keys\nsustain: "+(sustain?"true":"false")+" toggle with 'a' key";
+	ofDrawBitmapString(reportString, 32, 579);
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
 {
+	if (key == '-' || key == '_' ){
+		volume -= 0.05;
+		volume = std::max(volume, 0.f);
+	} else if (key == '+' || key == '=' ){
+		volume += 0.05;
+		volume = std::min(volume, 1.f);
+	} else if (key == 'a') {
+		sustain = !sustain;
+		if (!sustain) {
+			for (const auto &[key, freq] : mappedFrequency) {
+				if (pressedKeys.find(key) == pressedKeys.end())
+					freqPhaseAdders[key] = 0.0f;
+			}
+		}
+	}
+
 	if (mappedFrequency.find(key) == mappedFrequency.end())
 		return;
 	if (pressedKeys.find(key) != pressedKeys.end())
@@ -252,7 +274,9 @@ void ofApp::keyPressed(int key)
 void ofApp::keyReleased(int key)
 {
 	pressedKeys.erase(key);
-	freqPhaseAdders[key] = 0.0f;
+
+	if (!sustain)
+		freqPhaseAdders[key] = 0.0f;
 }
 
 //--------------------------------------------------------------
@@ -317,7 +341,7 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
 				newPhase *= 0.95;
 			}
             freqPhases[key] = fmod(newPhase + freqPhaseAdderMixers[key], glm::two_pi<float>());
-            sample += sin(freqPhases[key]);
+            sample += sin(freqPhases[key]) / mappedFrequency.size();
         }
         lAudio[i] = buffer[i*buffer.getNumChannels()    ] = sample * volume;
         rAudio[i] = buffer[i*buffer.getNumChannels() + 1] = sample * volume;

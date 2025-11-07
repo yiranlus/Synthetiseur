@@ -380,10 +380,10 @@ void ofApp::audioOut(ofSoundBuffer & buffer){
 					sample += freqVolumes[key] * sin(h * freqPhases[key]) / mappedFrequency.size();
 					break;
 				case TriangleSound:
-					sample += freqVolumes[key] * triangle(h * freqPhases[key]) / mappedFrequency.size();
+					sample += freqVolumes[key] * triangle(h * freqPhases[key]) / mappedFrequency.size() / (numOfHarmonics);
 					break;
 				case RectangleSound:
-					sample += freqVolumes[key] * rectangle(h * freqPhases[key]) / mappedFrequency.size();
+					sample += freqVolumes[key] * rectangle(h * freqPhases[key]) / mappedFrequency.size() / (numOfHarmonics * numOfHarmonics * numOfHarmonics);
 					break;
 				}
 			}

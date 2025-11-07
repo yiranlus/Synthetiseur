@@ -9,6 +9,12 @@ using std::map;
 
 #include "ofMain.h"
 
+enum SoundType {
+	SineSound,
+	TriangleSound,
+	RectangleSound
+};
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -37,8 +43,10 @@ class ofApp : public ofBaseApp{
 		void init_mappedBlackKeyIndices();
 		void audioOut(ofSoundBuffer & buffer) override;
 
-		inline float n_freq(float frequency) { return (log2(frequency)  - log2(440)) * 12; }
-		inline float freq_n(float n) { return pow(2, n/12.0f) * 440.0f; }
+		inline float n_freq(float frequency, float base = 440.0f)
+		{ return (log2(frequency)  - log2(base)) * 12; }
+		inline float freq_n(float n, float base = 440.0f)
+		{ return pow(2, n/12.0f) * base; }
 
 	private:
 		ofSoundStream soundStream;
@@ -50,7 +58,9 @@ class ofApp : public ofBaseApp{
 		// float upperFrequencyBound;
 
 		bool sustain;
+		SoundType soundType;
 
+		float baseFrequency;
 		set<int> pressedKeys;
 		map<int, float> mappedFrequency;
 		map<int, float> freqPhases;
